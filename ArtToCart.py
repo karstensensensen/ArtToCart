@@ -4,23 +4,6 @@ from pathlib import Path
 import string
 import codec
 
-extended_ascii_map = {
-    "Ç": "\x80",
-}
-
-key = input()
-
-print(key.encode('utf-8'))
-print(key)
-print(ord(key))
-
-print(ord(chr(200).encode('cp805').decode('cp805')))
-
-for i in range(255):
-    print(i, i.to_bytes(1, 'little').decode('cp805'))
-
-exit()
-
 def parseSizeSection(line_iterator):
     while True:
         line = next(line_iterator).strip().replace('\t', ' ')
