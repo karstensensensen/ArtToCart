@@ -144,78 +144,80 @@ def parseColorSection(line_iterator, size, section_name):
     return color_data
 
 
-target_files = sys.argv[1:]
+def main(files):
+    print("converting files ", target_files, " to .cart files")
 
-print("converting files ", target_files, " to .cart files")
+    for path in [Path(file_path) for file_path in target_files]:
 
-for path in [Path(file_path) for file_path in target_files]:
-
-    if not path.exists():
-        print("WARNING: the file ", path, " does not exist, skipping this file")
-        continue
-
-    if not path.suffix == ".art":
-        print("WARNING: the file ", path, " is not an Ascii texture file, conversion may fail")
-
-    size_data = None
-    symbols_data = None
-    foreground_data = None
-    background_data = None
-
-    with open(path, 'r', encoding='utf-8') as art_in:
-
-        # size section data
-
-        print("converting ", path, " to a .cart file")
-
-        failed_parse = False
-
-        lines = iter(art_in.readlines())
-
-        try:
-            size_data = parseSizeSection(lines)
-            if size_data is None:
-                continue
-
-            print("parsed size section")
-
-            symbols_data = parseSymbolsSection(lines, size_data)
-            if symbols_data is None:
-                continue
-
-            print("parsed symbols section")
-
-            foreground_data = parseColorSection(lines, size_data, "foreground color")
-            if foreground_data is None:
-                continue
-
-            print("parsed foreground color section")
-
-            background_data = parseColorSection(lines, size_data, "background color")
-            if background_data is None:
-                continue
-
-            print("parsed background color section")
-
-        except StopIteration as e:
-            print("the file is missing parts or whole sections, skipping this file")
+        if not path.exists():
+            print("WARNING: the file ", path, " does not exist, skipping this file")
             continue
 
-    cart_path = path.stem + ".cart"
+        if not path.suffix == ".art":
+            print("WARNING: the file ", path, " is not an Ascii texture file, conversion may fail")
 
-    print(f"writing file to {cart_path}")
+        size_data = None
+        symbols_data = None
+        foreground_data = None
+        background_data = None
 
-    with open(cart_path, 'wb') as cart_out:
-        for size in size_data:
-            cart_out.write(size.to_bytes(8, 'little'))
+        with open(path, 'r', encoding='utf-8') as art_in:
 
-        for row in zip(symbols_data, foreground_data, background_data):
-            for val in zip(row[0], row[1], row[2]):
-                if type(val[0]) is str:
-                    cart_out.write(val[0].encode('utf-8'))
-                else:
-                    cart_out.write(val[0].to_bytes(1, 'little'))
+            # size section data
 
-                for color in val[1:]:
-                    for c_val in color:
-                        cart_out.write(c_val.to_bytes(1, 'little'))
+            print("converting ", path, " to a .cart file")
+
+            failed_parse = False
+
+            lines = iter(art_in.readlines())
+
+            try:
+                size_data = parseSizeSection(lines)
+                if size_data is None:
+                    continue
+
+                print("parsed size section")
+
+                symbols_data = parseSymbolsSection(lines, size_data)
+                if symbols_data is None:
+                    continue
+
+                print("parsed symbols section")
+
+                foreground_data = parseColorSection(lines, size_data, "foreground color")
+                if foreground_data is None:
+                    continue
+
+                print("parsed foreground color section")
+
+                background_data = parseColorSection(lines, size_data, "background color")
+                if background_data is None:
+                    continue
+
+                print("parsed background color section")
+
+            except StopIteration as e:
+                print("the file is missing parts or whole sections, skipping this file")
+                continue
+
+        cart_path = path.stem + ".cart"
+
+        print(f"writing file to {cart_path}")
+
+        with open(cart_path, 'wb') as cart_out:
+            for size in size_data:
+                cart_out.write(size.to_bytes(8, 'little'))
+
+            for row in zip(symbols_data, foreground_data, background_data):
+                for val in zip(row[0], row[1], row[2]):
+                    if type(val[0]) is str:
+                        cart_out.write(val[0].encode('utf-8'))
+                    else:
+                        cart_out.write(val[0].to_bytes(1, 'little'))
+
+                    for color in val[1:]:
+                        for c_val in color:
+                            cart_out.write(c_val.to_bytes(1, 'little'))
+                            
+if __name__ == '__main__':
+    main(sys.argv[1:])
