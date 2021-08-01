@@ -1,8 +1,6 @@
 import sys
-import os
 from pathlib import Path
 import string
-import codec
 
 def parseSizeSection(line_iterator):
     while True:
@@ -54,25 +52,26 @@ def parseSymbolsSection(line_iterator, size):
         row_iterator = iter(line)
 
         # parse and append characters to the symbols table
-        i = 0
         for character in row_iterator:
-            i += 1
-            if not i % 2:
-                if character == ' ':
-                    continue
-                elif character in string.hexdigits:
-                    # use next two characters as a single hex value and convert an int
-                    try:
-                        symbols[-1].append(int(character + next(row_iterator), 16))
-                        i += 1
-                    except ValueError:
-                        print("key code did not evaluate to a valid hex value, skipping this file")
-                        return None
-                else:
-                    print("missing space between symbols or character code was not formatted corretly, skipping this file")
+            try:
+                seperator = next(row_iterator)
+            except StopIteration:
+                seperator = ' '
+
+            if seperator == ' ':
+                symbols[-1].append(character)
+            elif seperator in string.hexdigits:
+                # use next two characters as a single hex value and convert an int
+                try:
+                    symbols[-1].append(int(character + seperator, 16))
+                except ValueError:
+                    print("key code did not evaluate to a valid hex value, skipping this file")
                     return None
             else:
-                symbols[-1].append(character)
+                print("missing space between symbols or character code was not formatted corretly, skipping this file")
+                return None
+
+
 
 
 
@@ -137,17 +136,18 @@ def parseColorSection(line_iterator, size, section_name):
             # add missing alpha channel
             if len(color_values) == 3:
                 color_data[-1][-1].append(0xFF)
+            print(color_data[-1][-1], color_values)
         # stop loop when size is met
         if len(color_data) == size[1]:
             break
-
+    print(color_data)
     return color_data
 
 
 def main(files):
-    print("converting files ", target_files, " to .cart files")
+    print("converting files ", files, " to .cart files")
 
-    for path in [Path(file_path) for file_path in target_files]:
+    for path in [Path(file_path) for file_path in files]:
 
         if not path.exists():
             print("WARNING: the file ", path, " does not exist, skipping this file")
@@ -197,10 +197,12 @@ def main(files):
                 print("parsed background color section")
 
             except StopIteration as e:
-                print("the file is missing parts or whole sections, skipping this file")
+                print("the file has incomplete sections, skipping this file")
                 continue
 
-        cart_path = path.stem + ".cart"
+        location = '\\'.join(path.parts[:-1])
+
+        cart_path = f"{location}\\{path.stem}.cart"
 
         print(f"writing file to {cart_path}")
 
