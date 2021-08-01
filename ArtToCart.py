@@ -136,11 +136,9 @@ def parseColorSection(line_iterator, size, section_name):
             # add missing alpha channel
             if len(color_values) == 3:
                 color_data[-1][-1].append(0xFF)
-            print(color_data[-1][-1], color_values)
         # stop loop when size is met
         if len(color_data) == size[1]:
             break
-    print(color_data)
     return color_data
 
 
