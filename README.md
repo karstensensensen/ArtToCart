@@ -10,4 +10,9 @@ The files can also be specified as command line arguemnts if the script is calle
 
 the converted files filename will be the same as the passed files original filename.
 > [ArtToCart] file_name.art -> file_name.cart  
-> [CartToArt] file_name.cart -> file_name.art
+> [CartToArt] file_name.cart -> file_name.art 
+ 
+<br><br/>
+### Limitations
+- a conversion from .art to .cart removes all comments and will therefore not be restored when converting from a .cart file to a .art file. 
+Instead there will appear a comment over each section containing the section type.
