@@ -39,6 +39,9 @@ def parseSizeSection(line_iterator):
 def parseSymbolsSection(line_iterator, size):
     symbols = []
 
+    deb_line = 0
+    deb_col = 0
+
     while True:
         # remove newline character from the line
         line = next(line_iterator).replace('\n', '').replace('\r', '').replace('\t', ' ')
@@ -55,6 +58,7 @@ def parseSymbolsSection(line_iterator, size):
         for character in row_iterator:
             try:
                 seperator = next(row_iterator)
+                deb_col += 1
             except StopIteration:
                 seperator = ' '
 
@@ -65,15 +69,15 @@ def parseSymbolsSection(line_iterator, size):
                 try:
                     symbols[-1].append(int(character + seperator, 16))
                 except ValueError:
-                    print("key code did not evaluate to a valid hex value, skipping this file")
+                    print(f"key code did not evaluate to a valid hex value, skipping this file: line {deb_line}, col {deb_col}")
                     return None
             else:
                 print("missing space between symbols or character code was not formatted corretly, skipping this file")
                 return None
 
+            deb_col += 1
 
-
-
+        deb_line += 1
 
         # check if the length of the row matches the size of the texture
         if len(symbols[-1]) != size[0]:
@@ -86,8 +90,6 @@ def parseSymbolsSection(line_iterator, size):
         # stop when the correct size is reached
         if len(symbols) == size[1]:
             break
-
-
 
     return symbols
 
@@ -205,11 +207,14 @@ def main(files):
         print(f"writing file to {cart_path}")
 
         with open(cart_path, 'wb') as cart_out:
+            # Header
+            cart_out.write(b'CART')
+            
             for size in size_data:
                 cart_out.write(size.to_bytes(8, 'little'))
 
-            for row in zip(symbols_data, foreground_data, background_data):
-                for val in zip(row[0], row[1], row[2]):
+            for col in zip(zip(*symbols_data), zip(*foreground_data), zip(*background_data)):
+                for val in zip(col[0], col[1], col[2]):
                     if type(val[0]) is str:
                         cart_out.write(val[0].encode('utf-8'))
                     else:
